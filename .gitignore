@@ -1,3 +1,9 @@
+# versuchs files
+gpio_class.py
+keyikt_main.py
+linuxWiimoteLib.py
+servo_ctrl.py
+wiikt_main.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
