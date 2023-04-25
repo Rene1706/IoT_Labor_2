@@ -6,6 +6,8 @@
 
 import pygame
 import math
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 width = 400
 height = 200
@@ -21,6 +23,15 @@ vmax = 11.0
 speed_cur = 0
 angle_cur = 0
 
+# Arrays for animation plot
+t = [0]
+a = [0]
+f = [0]
+v = [0]
+
+# Start initilization
+acc = 0
+frict = 0
 
 # start main pygame event processing loop here
 pygame.display.init()
@@ -46,6 +57,26 @@ def calculateFriction(velocity, vmax, frict_max):
     sigma = 4.0
     friction = frict_max/2.0*(1+math.erf((abs(velocity)-µ)/(math.sqrt(2*sigma**2))))
     return friction
+
+def update(frame):
+    # Update plots
+    t.append(t[-1]+delta)
+    a.append(acc)
+    f.append(frict)
+    v.append(speed_cur)
+
+    plt.clf()
+    # Plot the updated data
+    plt.plot(a, label='Acceleration')
+    plt.plot(f, label='Friction')
+    plt.plot(v, label='Velocity')
+    plt.legend()
+
+# Animation plot configuration
+fig, ax = plt.subplots()
+ani = FuncAnimation(plt.gcf(), update, interval=100)
+plt.ion()
+plt.show()
 
 running = True
 try:
@@ -108,6 +139,10 @@ try:
                 speed_cur += frict * delta
             elif speed_cur < 0:
                 speed_cur -= frict * delta
+
+        # Update animation
+        plt.draw()
+        plt.pause(0.001)
         
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
