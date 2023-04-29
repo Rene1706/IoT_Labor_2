@@ -19,9 +19,10 @@ dec = 4.5  # Max deceleration of the car (per sec.)
 frict_max = -1.0  # max friction
 angle_acc = 300  # max change of angle (per sec.)
 vmax = 11.0
+angle_cur = 0.0
+angle_max = 45.0
 
 speed_cur = 0
-angle_cur = 0
 
 # Arrays for animation plot
 t = [0]
@@ -44,7 +45,7 @@ clock = pygame.time.Clock()
 
 
 # States of the keys
-keystates = {'quit': False, 'up': False, 'down': False, 'reset': False}
+keystates = {'quit': False, 'up': False, 'down': False, 'right': False, 'left': False, 'reset': False}
 
 def calculateAcceleration(velocity, vmax, acc_max):
     µ = vmax/2.0
@@ -102,6 +103,10 @@ try:
                     keystates['up'] = True
                 elif event.key == pygame.K_DOWN:
                     keystates['down'] = True
+                elif event.key == pygame.K_RIGHT:
+                    keystates['right'] = True
+                elif event.key == pygame.K_LEFT:
+                    keystates['left'] = True
                 elif event.key == pygame.K_r:
                     keystates['reset'] = True
 
@@ -113,6 +118,10 @@ try:
                     keystates['up'] = False
                 elif event.key == pygame.K_DOWN:
                     keystates['down'] = False
+                elif event.key == pygame.K_RIGHT:
+                    keystates['right'] = False
+                elif event.key == pygame.K_LEFT:
+                    keystates['left'] = False
                 elif event.key == pygame.K_r:
                     keystates['reset'] = False
 
@@ -122,12 +131,14 @@ try:
     
         if keystates['reset']:
             speed_cur = 0
+            angle_cur = 0
+
         
         # Calculate acceleration and friction depending on velocity
         acc = calculateAcceleration(speed_cur, vmax, acc_max)
         frict = calculateFriction(speed_cur, vmax, frict_max)
 
-        # Checking Acceleration, breaking depending on key (up, down)
+        # Handle Acceleration, breaking depending on key (up, down)
         if keystates['up'] and not keystates['down']:
             if speed_cur < vmax and speed_cur >= 0:     # Accel forward for arrow_up
                 speed_cur += acc * delta
@@ -143,6 +154,20 @@ try:
                 speed_cur += frict * delta
             elif speed_cur < 0:
                 speed_cur -= frict * delta
+
+        # Handle steering angle
+        if keystates['right'] and not keystates['left']:
+            if angle_cur < angle_max:
+                angle_cur += angle_acc * delta
+        elif keystates['left'] and not keystates['right']:
+            if angle_cur > -angle_max:
+                angle_cur -= angle_acc * delta
+        else:
+            if angle_cur > 0:
+                angle_cur -= angle_acc * delta
+            elif angle_cur < 0:
+                angle_cur += angle_acc * delta
+
 
         # Update animation
         #plt.draw()
