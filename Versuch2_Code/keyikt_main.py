@@ -40,12 +40,15 @@ pygame.display.init()
 # set up the pygame screen enviroment
 screen = pygame.display.set_mode((width, height))
 
+# get the center position of the pygame window
+center_pos = (width / 2, height / 2)
+
 # get a clock to generate frequent behaviour
 clock = pygame.time.Clock()
 
 
 # States of the keys
-keystates = {'quit': False, 'up': False, 'down': False, 'right': False, 'left': False, 'reset': False}
+keystates = {'quit': False, 'up': False, 'down': False, 'right': False, 'left': False, 'reset': False, 'mouse': False}
 
 def calculateAcceleration(velocity, vmax, acc_max):
     µ = vmax/2.0
@@ -58,6 +61,26 @@ def calculateFriction(velocity, vmax, frict_max):
     sigma = 4.0
     friction = frict_max/2.0*(1+math.erf((abs(velocity)-µ)/(math.sqrt(2*sigma**2))))
     return friction
+
+# Methode for determining the angle with the mouse
+def get_angle(mouse_pos, center_pos, max_angle=45):
+    # calculate the displacement of the mouse from the center position along the x-axis
+    dx = mouse_pos[0] - center_pos[0]
+
+    # calculate the angle as a linear function of the x displacement, with the maximum angle corresponding to the maximum x displacement
+    angle = (dx / center_pos[0]) * max_angle
+
+    return angle
+
+# Methode for determining the speed with the mouse
+def get_speed(mouse_pos, center_pos, max_speed=11):
+    # calculate the displacement of the mouse from the center position along the y-axis
+    dy = mouse_pos[1] - center_pos[1]
+
+    # calculate the speed as a linear function of the y displacement, with the maximum speed corresponding to the maximum y displacement
+    speed = -(dy / center_pos[1]) * max_speed
+
+    return speed
 
 def update(frame):
     # Update plots
@@ -80,6 +103,7 @@ def update(frame):
 #plt.show()
 
 running = True
+mouse_modus = False
 try:
     while running:
         # set clock frequency
@@ -109,6 +133,8 @@ try:
                     keystates['left'] = True
                 elif event.key == pygame.K_r:
                     keystates['reset'] = True
+                elif event.key == pygame.K_m:
+                    keystates['mouse'] = True
 
             # check for key up events (release)
             if event.type == pygame.KEYUP:
@@ -124,6 +150,8 @@ try:
                     keystates['left'] = False
                 elif event.key == pygame.K_r:
                     keystates['reset'] = False
+                elif event.key == pygame.K_m:
+                    keystates['mouse'] = False
 
         # Check what to do depending on key press
         if keystates['quit']:
@@ -132,8 +160,12 @@ try:
         if keystates['reset']:
             speed_cur = 0
             angle_cur = 0
-
+            mouse_modus = False
         
+        if keystates['mouse']:
+            mouse_modus = True
+
+
         # Calculate acceleration and friction depending on velocity
         acc = calculateAcceleration(speed_cur, vmax, acc_max)
         frict = calculateFriction(speed_cur, vmax, frict_max)
@@ -168,11 +200,23 @@ try:
             elif angle_cur < 0:
                 angle_cur += angle_acc * delta
 
+        # Handle speed and angle with mouse
+        mouse_pos = pygame.mouse.get_pos()
+        a = 0.0
+        s = 0.0
+        if mouse_modus:
+            a = get_angle(mouse_pos, center_pos)
+            s = get_speed(mouse_pos, center_pos)
+
+        # draw the scene
+        screen.fill((255, 255, 255))
+        pygame.draw.line(screen, (0, 0, 0), center_pos, mouse_pos)
+        pygame.display.flip()
 
         # Update animation
         #plt.draw()
         #plt.pause(0.001)
-
+        print("({},{})".format(a, s))
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
 except KeyboardInterrupt:
