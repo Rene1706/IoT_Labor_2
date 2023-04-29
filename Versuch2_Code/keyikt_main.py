@@ -73,10 +73,10 @@ def update(frame):
     plt.legend()
 
 # Animation plot configuration
-fig, ax = plt.subplots()
-ani = FuncAnimation(plt.gcf(), update, interval=100)
-plt.ion()
-plt.show()
+#fig, ax = plt.subplots()
+#ani = FuncAnimation(plt.gcf(), update, interval=100)
+#plt.ion()
+#plt.show()
 
 running = True
 try:
@@ -116,7 +116,7 @@ try:
                 elif event.key == pygame.K_r:
                     keystates['reset'] = False
 
-        # do something about the key states here, now that the event queue has been processed
+        # Check what to do depending on key press
         if keystates['quit']:
             running = False
     
@@ -127,23 +127,27 @@ try:
         acc = calculateAcceleration(speed_cur, vmax, acc_max)
         frict = calculateFriction(speed_cur, vmax, frict_max)
 
-        #TODO Check that keydown is negativ acceleration when speed < 0 
+        # Checking Acceleration, breaking depending on key (up, down)
         if keystates['up'] and not keystates['down']:
-            if speed_cur < vmax:
+            if speed_cur < vmax and speed_cur >= 0:     # Accel forward for arrow_up
                 speed_cur += acc * delta
+            elif speed_cur < 0:                         # Break from backwards travel with arrow_up
+                speed_cur += dec * delta
         elif keystates['down'] and not keystates['up']:
-            if speed_cur > -vmax:
+            if speed_cur > 0:                           # Break from forward travel with arrow down
                 speed_cur -= dec * delta
-        else:
+            elif speed_cur <= 0 and speed_cur > -vmax:  # Accel backwards for arrow down 
+                speed_cur -= acc *delta
+        else:                                           # Break with friction in either direction
             if speed_cur > 0:
                 speed_cur += frict * delta
             elif speed_cur < 0:
                 speed_cur -= frict * delta
 
         # Update animation
-        plt.draw()
-        plt.pause(0.001)
-        
+        #plt.draw()
+        #plt.pause(0.001)
+
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
 except KeyboardInterrupt:
