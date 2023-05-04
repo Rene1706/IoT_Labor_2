@@ -21,7 +21,7 @@ angle_acc = 300  # max change of angle (per sec.)
 vmax = 11.0
 angle_cur = 0.0
 angle_max = 45.0
-
+engine_active = False
 speed_cur = 0
 
 # Arrays for animation plot
@@ -153,6 +153,11 @@ try:
                 elif event.key == pygame.K_m:
                     keystates['mouse'] = False
 
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                engine_active = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                engine_active = False
+
         # Check what to do depending on key press
         if keystates['quit']:
             running = False
@@ -161,52 +166,55 @@ try:
             speed_cur = 0
             angle_cur = 0
             mouse_modus = False
-        
+
         if keystates['mouse']:
             mouse_modus = True
-
 
         # Calculate acceleration and friction depending on velocity
         acc = calculateAcceleration(speed_cur, vmax, acc_max)
         frict = calculateFriction(speed_cur, vmax, frict_max)
 
-        # Handle Acceleration, breaking depending on key (up, down)
-        if keystates['up'] and not keystates['down']:
-            if speed_cur < vmax and speed_cur >= 0:     # Accel forward for arrow_up
-                speed_cur += acc * delta
-            elif speed_cur < 0:                         # Break from backwards travel with arrow_up
-                speed_cur += dec * delta
-        elif keystates['down'] and not keystates['up']:
-            if speed_cur > 0:                           # Break from forward travel with arrow down
-                speed_cur -= dec * delta
-            elif speed_cur <= 0 and speed_cur > -vmax:  # Accel backwards for arrow down 
-                speed_cur -= acc *delta
-        else:                                           # Break with friction in either direction
-            if speed_cur > 0:
-                speed_cur += frict * delta
-            elif speed_cur < 0:
-                speed_cur -= frict * delta
+        # Engine only active when mouse pressed
+        if not engine_active:
+            acc = frict #TODO Make accell=fric so when moto off 
 
-        # Handle steering angle
-        if keystates['right'] and not keystates['left']:
-            if angle_cur < angle_max:
-                angle_cur += angle_acc * delta
-        elif keystates['left'] and not keystates['right']:
-            if angle_cur > -angle_max:
-                angle_cur -= angle_acc * delta
-        else:
-            if angle_cur > 0:
-                angle_cur -= angle_acc * delta
-            elif angle_cur < 0:
-                angle_cur += angle_acc * delta
-
-        # Handle speed and angle with mouse
+        # Get mouse position
         mouse_pos = pygame.mouse.get_pos()
-        a = 0.0
-        s = 0.0
-        if mouse_modus:
-            a = get_angle(mouse_pos, center_pos)
-            s = get_speed(mouse_pos, center_pos)
+
+        if not mouse_modus:
+            # Handle Acceleration, breaking depending on key (up, down)
+            if keystates['up'] and not keystates['down']:
+                if speed_cur < vmax and speed_cur >= 0:     # Accel forward for arrow_up
+                    speed_cur += acc * delta
+                elif speed_cur < 0:                         # Break from backwards travel with arrow_up
+                    speed_cur += dec * delta
+            elif keystates['down'] and not keystates['up']:
+                if speed_cur > 0:                           # Break from forward travel with arrow down
+                    speed_cur -= dec * delta
+                elif speed_cur <= 0 and speed_cur > -vmax:  # Accel backwards for arrow down 
+                    speed_cur -= acc *delta
+            else:                                           # Break with friction in either direction
+                if speed_cur > 0:
+                    speed_cur += frict * delta
+                elif speed_cur < 0:
+                    speed_cur -= frict * delta
+
+            # Handle steering angle on key (left, right)
+            if keystates['right'] and not keystates['left']:
+                if angle_cur < angle_max:
+                    angle_cur += angle_acc * delta
+            elif keystates['left'] and not keystates['right']:
+                if angle_cur > -angle_max:
+                    angle_cur -= angle_acc * delta
+            else:
+                if angle_cur > 0:
+                    angle_cur -= angle_acc * delta
+                elif angle_cur < 0:
+                    angle_cur += angle_acc * delta
+        else:
+            # Handle speed and angle with mouse
+            angle_cur = get_angle(mouse_pos, center_pos)
+            speed_cur = get_speed(mouse_pos, center_pos)
 
         # draw the scene
         screen.fill((255, 255, 255))
@@ -216,7 +224,6 @@ try:
         # Update animation
         #plt.draw()
         #plt.pause(0.001)
-        print("({},{})".format(a, s))
         print("({},{} --> {})".format(speed_cur, angle_cur, (speed_cur - last) / delta))
     
 except KeyboardInterrupt:
