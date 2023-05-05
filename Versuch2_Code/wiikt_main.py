@@ -77,6 +77,11 @@ try:
 		if (wiistate.ButtonState.One):
 			real_speed = -cur_speed
 		
+		# Reset Button
+		if (wiistate.ButtonState.B):
+			cur_angle = 0
+			cur_speed = 0
+		
 		setLeds(wiimote, cur_speed, speed_max)
 
 		print("{},{}".format(real_speed, cur_angle))
