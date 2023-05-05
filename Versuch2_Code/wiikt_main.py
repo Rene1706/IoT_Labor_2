@@ -20,7 +20,31 @@ cur_speed = 0
 cur_angle = 0
 dividor = 10.0
 
-def setLeds(wiimote, cur_speed, speed_max):
+wiimote_roll = 0
+wiimote_pitch = 0
+
+def calculateSpeed(wiimote_roll, speed_max):
+    max_roll = 90.0
+    if wiimote_roll >= max_roll:
+	    speed = speed_max
+    elif wiimote_roll <= -max_roll:
+	    speed = -speed_max
+    else:
+        speed = (wiimote_roll / max_roll) * speed_max
+
+    return speed
+
+def calculateWiimoteAngle(wimoteAccelStates):
+	x,y,z = wimoteAccelStates
+	if x >= 0:
+		roll = -z
+	elif x < 0:
+		roll = z
+	pitch = 0
+	print(x,y,z)
+	return roll, pitch
+
+def setLeds(cur_speed, speed_max):
 	limits = speed_max/4.0
 	led1 = False
 	led2 = False
@@ -36,7 +60,7 @@ def setLeds(wiimote, cur_speed, speed_max):
 		led3 = True
 	if cur_speed > limits*3:
 		led4 = True
-	print("{},{},{},{}".format(led1,led2,led3,led4))
+	#print("{},{},{},{}".format(led1,led2,led3,led4))
 	wiimote.SetLEDs(led1, led2, led3, led4)
 
 try:
@@ -78,13 +102,22 @@ try:
 			real_speed = -cur_speed
 		
 		# Reset Button
-		if (wiistate.ButtonState.B):
+		if (wiistate.ButtonState.A):
 			cur_angle = 0
 			cur_speed = 0
-		
-		setLeds(wiimote, cur_speed, speed_max)
 
-		print("{},{}".format(real_speed, cur_angle))
+		# Motor Active Button
+		if (wiistate.ButtonState.B):
+			wiimote_roll, wiimote_pitch = calculateWiimoteAngle(wiimote.getAccelState())
+			print(wiimote_roll)
+
+			speed = calculateSpeed(wiimote_roll, speed_max)
+			print(speed)
+			#TODO write to function set_speed
+
+		setLeds(cur_speed, speed_max)
+		#print(wiimote.getAccelState())
+		#print("{},{}".format(real_speed, cur_angle))
 		sleep(0.1)
 
 except KeyboardInterrupt:
