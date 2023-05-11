@@ -9,6 +9,7 @@ from linuxWiimoteLib import *
 # initialize wiimote
 wiimote = Wiimote()
 
+# Get wiimote adress via hcitool scan
 #Insert address and name of device here
 #device = ('00:1F:C5:49:AE:86', 'Nintendo RVL-CNT-01')
 device = ('00:1F:C5:45:E0:A5', 'Nintendo RVL-CNT-01')
@@ -34,15 +35,14 @@ def calculateSpeed(wiimote_roll, speed_max):
 
     return speed
 
-def calculateWiimoteAngle(wimoteAccelStates):
+def calculateWiimoteRoll(wimoteAccelStates):
 	x,y,z = wimoteAccelStates
 	if x >= 0:
 		roll = -z
 	elif x < 0:
 		roll = z
-	pitch = 0
 	print(x,y,z)
-	return roll, pitch
+	return roll
 
 def setLeds(cur_speed, speed_max):
 	limits = speed_max/4.0
@@ -63,6 +63,37 @@ def setLeds(cur_speed, speed_max):
 	#print("{},{},{},{}".format(led1,led2,led3,led4))
 	wiimote.SetLEDs(led1, led2, led3, led4)
 
+class SteeringHandler(threading.Thread):
+	def __init__(self, wiimote):
+		threading.Thread.__init__(self)
+		self.wiimote = wiimote
+		self.wiimote_pitch = 0
+		self.last_pitch = 0
+		self.start()
+
+	def calculateWiimotePitch(self, wimoteAccelStates):
+		x,y,z = wimoteAccelStates
+		print(x,y,z)
+		return y
+	
+	def movingAverage(self, pitch_value, w=0.5):
+		filtered_value = w * pitch_value + (1 - w) * self.last_pitch
+		self.last_pitch = pitch_value
+		return filtered_value
+	
+	def exponentialSmoothing(pitch_value, alpha=1.2, n=2):
+		return alpha * pitch_value**n + (1-alpha)*pitch_value
+
+	def run(self):
+		while True:
+			self.wiimote_pitch = self.calculateWiimotePitch(self.wiimote.getAccelState())
+			filtered_val = self.movingAverage(self.wiimote_pitch)
+			print("Steering Thread is running {} {}...".format(self.wiimote_pitch, filtered_val))
+			time.sleep(0.1)
+	
+	def stop(self):
+		pass
+
 try:
 	print("Press any key on wiimote to connect")
 	while (not connected):
@@ -73,12 +104,14 @@ try:
 	wiimote.SetAccelerometerMode()
 
 	wiistate = wiimote.WiimoteState
+
+	steeringHandler = SteeringHandler(wiimote)
 	while True:
 		# re-calibrate accelerometer
 		if (wiistate.ButtonState.Home):
 			print('re-calibrating')
 			wiimote.calibrateAccelerometer()
-
+			steeringHandler.last_pitch = 0
 
 		# Handle Speed angle with keys
 		if (wiistate.ButtonState.Up):
@@ -108,7 +141,7 @@ try:
 
 		# Motor Active Button
 		if (wiistate.ButtonState.B):
-			wiimote_roll, wiimote_pitch = calculateWiimoteAngle(wiimote.getAccelState())
+			wiimote_roll = calculateWiimoteRoll(wiimote.getAccelState())
 			print(wiimote_roll)
 
 			speed = calculateSpeed(wiimote_roll, speed_max)
@@ -123,3 +156,4 @@ try:
 except KeyboardInterrupt:
 	print("Exiting through keyboard event (CTRL + C)")
 	exit(wiimote)
+	steeringHandler.stop()
