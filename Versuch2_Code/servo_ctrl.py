@@ -4,12 +4,11 @@
 #                            Aufgabe 1.3                              #
 #######################################################################
 
-#import gpio_class
+import gpio_class
 import time
 
 def write(servo, pulse):
-    pass
-    #gpio_class.write(servo, pulse)
+    gpio_class.write(servo, pulse)
 
 class Motor(object):
     PWM_PIN = 1     # GPIO pin 11
@@ -25,6 +24,7 @@ class Motor(object):
     def set_speed(self, speed):
         if speed > self.max_speed or speed < - self.max_speed:
             print("Speed out of bounds")
+            return
             #raise() #TODO Raise value out of bound error
 
         pulse = int(50.0/self.max_speed * speed + 150)
@@ -48,6 +48,7 @@ class Steering(object):
     def set_angle(self, angle):
         if angle > self.max_angle or angle < -self.max_angle:
             print("Angle out of bounds")
+            return
             #raise() #TODO Raise value out of bound error
 
         pulse = int(40.0/self.max_angle * angle + 155)
@@ -63,22 +64,22 @@ if __name__ == "__main__":
 
     # Check Motor PWM
     motor.set_speed(0)
-    #time.sleep(1)
+    time.sleep(1)
     motor.set_speed(11)
-    #time.sleep(1)
+    time.sleep(1)
     motor.set_speed(-11)
-    #time.sleep(1)
+    time.sleep(1)
     motor.set_speed(15)
-    #time.sleep(1)
+    time.sleep(1)
     motor.stop()
 
     # Check steering PWM
     steering.set_angle(0)
-    #time.sleep(1)
+    time.sleep(1)
     steering.set_angle(45)
-    #time.sleep(1)
+    time.sleep(1)
     steering.set_angle(-45)
-    #time.sleep(1)
+    time.sleep(1)
     steering.set_angle(200)
-    #time.sleep(1)
+    time.sleep(1)
     steering.stop()

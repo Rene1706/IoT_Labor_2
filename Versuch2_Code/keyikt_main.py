@@ -23,6 +23,7 @@ angle_cur = 0.0
 angle_max = 45.0
 engine_active = False
 speed_cur = 0
+toggle = False
 
 # Arrays for animation plot
 t = [0]
@@ -48,7 +49,7 @@ clock = pygame.time.Clock()
 
 
 # States of the keys
-keystates = {'quit': False, 'up': False, 'down': False, 'right': False, 'left': False, 'reset': False, 'mouse': False}
+keystates = {'quit': False, 'up': False, 'down': False, 'right': False, 'left': False, 'reset': False, 'mouse': False, 'toggle': False}
 
 def calculateAcceleration(velocity, vmax, acc_max):
     mu = vmax/2.0
@@ -136,6 +137,8 @@ try:
                     keystates['reset'] = True
                 elif event.key == pygame.K_m:
                     keystates['mouse'] = True
+                elif event.key == pygame.K_t:
+                    keystates['toggle'] = True
 
             # check for key up events (release)
             if event.type == pygame.KEYUP:
@@ -153,6 +156,8 @@ try:
                     keystates['reset'] = False
                 elif event.key == pygame.K_m:
                     keystates['mouse'] = False
+                elif event.key == pygame.K_t:
+                    keystates['toggle'] = False
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 engine_active = True
@@ -162,6 +167,14 @@ try:
         # Check what to do depending on key press
         if keystates['quit']:
             running = False
+
+        if keystates['toggle']:
+            if toggle:
+                print("Toggle off")
+                toggle = False
+            else:
+                print("Toggle on")
+                toggle = True
     
         if keystates['reset']:
             speed_cur = 0
@@ -177,62 +190,77 @@ try:
 
         # Get mouse position
         mouse_pos = pygame.mouse.get_pos()
-
-        if not mouse_modus:
-            # Handle Acceleration, breaking depending on key (up, down)
+        if toggle:
+            # Real speed controll
             if keystates['up'] and not keystates['down']:
-                if speed_cur < vmax and speed_cur >= 0:     # Accel forward for arrow_up
-                    speed_cur += acc * delta
-                elif speed_cur < 0:                         # Break from backwards travel with arrow_up
-                    speed_cur += dec * delta
+                if speed_cur < vmax:     # Accel forward for arrow_up
+                    speed_cur += vmax/11
             elif keystates['down'] and not keystates['up']:
-                if speed_cur > 0:                           # Break from forward travel with arrow down
-                    speed_cur -= dec * delta
-                elif speed_cur <= 0 and speed_cur > -vmax:  # Accel backwards for arrow down 
-                    speed_cur -= acc *delta
-            else:                                           # Break with friction in either direction
-                if speed_cur > 0:
-                    speed_cur += frict * delta
-                elif speed_cur < 0:
-                    speed_cur -= frict * delta
-
-            # Handle steering angle on key (left, right)
+                if speed_cur > -vmax:
+                    speed_cur -= vmax/11
             if keystates['right'] and not keystates['left']:
-                if angle_cur < angle_max:
-                    angle_cur += angle_acc * delta
+                if angle_cur < angle_max:     # Accel forward for arrow_up
+                    angle_cur += angle_max/45
             elif keystates['left'] and not keystates['right']:
                 if angle_cur > -angle_max:
-                    angle_cur -= angle_acc * delta
-            else:
-                if angle_cur > 0:
-                    angle_cur -= angle_acc * delta
-                elif angle_cur < 0:
-                    angle_cur += angle_acc * delta
+                    angle_cur -= angle_max/45
         else:
-            # Handle speed and angle with mouse
-            angle_max = get_angle(mouse_pos, center_pos)
-            vmax = get_speed(mouse_pos, center_pos)
-            #print("AMAX: {}, VMAX {}".format(angle_max, vmax))
-            # Engine only active when mouse pressed
-            if not engine_active:
-                acc = frict #TODO Make accell=fric so when moto off
+            if not mouse_modus:
+                # Simulation speed control
+                # Handle Acceleration, breaking depending on key (up, down)
+                if keystates['up'] and not keystates['down']:
+                    if speed_cur < vmax and speed_cur >= 0:     # Accel forward for arrow_up
+                        speed_cur += acc * delta
+                    elif speed_cur < 0:                         # Break from backwards travel with arrow_up
+                        speed_cur += dec * delta
+                elif keystates['down'] and not keystates['up']:
+                    if speed_cur > 0:                           # Break from forward travel with arrow down
+                        speed_cur -= dec * delta
+                    elif speed_cur <= 0 and speed_cur > -vmax:  # Accel backwards for arrow down 
+                        speed_cur -= acc *delta
+                else:                                           # Break with friction in either direction
+                    if speed_cur > 0:
+                        speed_cur += frict * delta
+                    elif speed_cur < 0:
+                        speed_cur -= frict * delta
 
-            if engine_active:
-                if speed_cur < vmax:     
-                    speed_cur += acc * delta
-                if speed_cur > vmax:     
-                    speed_cur -= acc * delta
+                # Handle steering angle on key (left, right)
+                if keystates['right'] and not keystates['left']:
+                    if angle_cur < angle_max:
+                        angle_cur += angle_acc * delta
+                elif keystates['left'] and not keystates['right']:
+                    if angle_cur > -angle_max:
+                        angle_cur -= angle_acc * delta
+                else:
+                    if angle_cur > 0:
+                        angle_cur -= angle_acc * delta
+                    elif angle_cur < 0:
+                        angle_cur += angle_acc * delta
             else:
-                if speed_cur > 0:
-                    speed_cur += frict * delta
-                elif speed_cur < 0:
-                    speed_cur -= frict * delta
+                # Handle speed and angle with mouse
+                angle_max = get_angle(mouse_pos, center_pos)
+                vmax = get_speed(mouse_pos, center_pos)
+                #print("AMAX: {}, VMAX {}".format(angle_max, vmax))
+                # Engine only active when mouse pressed
+                if not engine_active:
+                    acc = frict #TODO Make accell=fric so when moto off
 
-            # Handle steering angle on key (left, right)
-            if angle_cur < angle_max:
-                angle_cur += angle_acc * delta
-            if angle_cur > angle_max:
-                angle_cur -= angle_acc * delta
+                if engine_active:
+                    if speed_cur < vmax:     
+                        speed_cur += acc * delta
+                    if speed_cur > vmax:     
+                        speed_cur -= acc * delta
+                else:
+                    if speed_cur > 0:
+                        speed_cur += frict * delta
+                    elif speed_cur < 0:
+                        speed_cur -= frict * delta
+
+                # Handle steering angle on key (left, right)
+                if angle_cur < angle_max:
+                    angle_cur += angle_acc * delta
+                if angle_cur > angle_max:
+                    angle_cur -= angle_acc * delta
             
 
 
