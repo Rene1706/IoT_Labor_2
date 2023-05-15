@@ -16,7 +16,7 @@ class Motor(object):
     max_pulse = 200
     max_speed = 11.0
     speed_servo = None # TODO Check for speed servo
-    def __init__(self, servo=None):
+    def __init__(self, servo=PWM_PIN):
         self.speed_servo = servo
         #assert() # TODO Check that servo != None
         write(servo, 150)
@@ -42,7 +42,7 @@ class Steering(object):
     steering_servo = None # TODO Check for steering servo
     def __init__(self, servo=None):
         print("Initilizing Servo: {}".format(servo))
-        self.steering_sero = servo
+        self.steering_servo = servo
         #assert() # TODO Check that servo != None
 
     def set_angle(self, angle):
