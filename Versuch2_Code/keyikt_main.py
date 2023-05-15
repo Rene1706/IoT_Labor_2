@@ -6,8 +6,8 @@
 
 import pygame
 import math
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+#import matplotlib.pyplot as plt
+#from matplotlib.animation import FuncAnimation
 
 width = 400
 height = 200
@@ -51,15 +51,15 @@ clock = pygame.time.Clock()
 keystates = {'quit': False, 'up': False, 'down': False, 'right': False, 'left': False, 'reset': False, 'mouse': False}
 
 def calculateAcceleration(velocity, vmax, acc_max):
-    µ = vmax/2.0
+    mu = vmax/2.0
     sigma = 2.5
-    acceleration = acc_max*(1-1.0/2.0*(1+math.erf((abs(velocity)-µ)/(math.sqrt(2*sigma**2)))))
+    acceleration = acc_max*(1-1.0/2.0*(1+math.erf((abs(velocity)-mu)/(math.sqrt(2*sigma**2)))))
     return acceleration
 
 def calculateFriction(velocity, vmax, frict_max):
-    µ = vmax/2.0
+    mu = vmax/2.0
     sigma = 4.0
-    friction = frict_max/2.0*(1+math.erf((abs(velocity)-µ)/(math.sqrt(2*sigma**2))))
+    friction = frict_max/2.0*(1+math.erf((abs(velocity)-mu)/(math.sqrt(2*sigma**2))))
     return friction
 
 # Methode for determining the angle with the mouse
