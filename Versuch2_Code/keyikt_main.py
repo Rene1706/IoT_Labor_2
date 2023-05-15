@@ -111,7 +111,8 @@ try:
         
         # save the last speed 4 analysis
         last = speed_cur
-     
+        vmax = 11.0
+        angle_max = 45.0
         # process input events
         for event in pygame.event.get():
         
@@ -174,10 +175,6 @@ try:
         acc = calculateAcceleration(speed_cur, vmax, acc_max)
         frict = calculateFriction(speed_cur, vmax, frict_max)
 
-        # Engine only active when mouse pressed
-        if not engine_active:
-            acc = frict #TODO Make accell=fric so when moto off 
-
         # Get mouse position
         mouse_pos = pygame.mouse.get_pos()
 
@@ -213,8 +210,31 @@ try:
                     angle_cur += angle_acc * delta
         else:
             # Handle speed and angle with mouse
-            angle_cur = get_angle(mouse_pos, center_pos)
-            speed_cur = get_speed(mouse_pos, center_pos)
+            angle_max = get_angle(mouse_pos, center_pos)
+            vmax = get_speed(mouse_pos, center_pos)
+            #print("AMAX: {}, VMAX {}".format(angle_max, vmax))
+            # Engine only active when mouse pressed
+            if not engine_active:
+                acc = frict #TODO Make accell=fric so when moto off
+
+            if engine_active:
+                if speed_cur < vmax:     
+                    speed_cur += acc * delta
+                if speed_cur > vmax:     
+                    speed_cur -= acc * delta
+            else:
+                if speed_cur > 0:
+                    speed_cur += frict * delta
+                elif speed_cur < 0:
+                    speed_cur -= frict * delta
+
+            # Handle steering angle on key (left, right)
+            if angle_cur < angle_max:
+                angle_cur += angle_acc * delta
+            if angle_cur > angle_max:
+                angle_cur -= angle_acc * delta
+            
+
 
         # draw the scene
         screen.fill((255, 255, 255))
