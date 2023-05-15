@@ -12,7 +12,10 @@ wiimote = Wiimote()
 # Get wiimote adress via hcitool scan
 #Insert address and name of device here
 #device = ('00:1F:C5:49:AE:86', 'Nintendo RVL-CNT-01')
-device = ('00:1F:C5:45:E0:A5', 'Nintendo RVL-CNT-01')
+#device = ('00:1F:C5:45:E0:A5', 'Nintendo RVL-CNT-01')
+#device = ('B8:AE:6E:30:0F:0F', 'Nintendo RVL-CNT-01-TR')
+device = ('B8:AE:6E:2F:FF:4D', 'Nintendo RVL-CNT-01-TR')
+
 
 connected = False
 speed_max = 11.0
